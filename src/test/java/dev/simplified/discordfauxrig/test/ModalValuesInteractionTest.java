@@ -1,5 +1,6 @@
-package dev.simplified.discordfauxrig;
+package dev.simplified.discordfauxrig.test;
 
+import dev.simplified.discordfauxrig.OfflineHarness;
 import dev.simplified.discordfauxrig.command.ModalValuesCommand;
 import dev.simplified.discordfauxrig.data.TestIds;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
