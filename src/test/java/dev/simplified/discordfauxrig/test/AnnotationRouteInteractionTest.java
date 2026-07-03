@@ -2,7 +2,6 @@ package dev.simplified.discordfauxrig.test;
 
 import dev.simplified.discordfauxrig.OfflineHarness;
 import dev.simplified.discordfauxrig.command.AnnotatedButtonCommand;
-import dev.simplified.discordfauxrig.data.TestIds;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +39,7 @@ class AnnotationRouteInteractionTest {
             );
 
             // Click it - the @Component route runs instead of the button's inline handler.
-            harness.clickButton(TestIds.REPLY_MESSAGE_ID, AnnotatedButtonCommand.CACHED_ID);
+            harness.clickButton(harness.config().getReplyMessageId(), AnnotatedButtonCommand.CACHED_ID);
 
             RecordedRequest edit = harness.awaitRequest(
                 request -> request.path().contains("button-token-" + AnnotatedButtonCommand.CACHED_ID)

@@ -1,7 +1,6 @@
 package dev.simplified.discordfauxrig.test;
 
 import dev.simplified.discordfauxrig.OfflineHarness;
-import dev.simplified.discordfauxrig.data.TestIds;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +17,7 @@ class MessageUserCommandTest {
     @Test
     void user_command_replies_offline() {
         try (OfflineHarness harness = new OfflineHarness().boot(Duration.ofSeconds(30))) {
-            harness.sendUserCommand("greet", TestIds.USER_ID);
+            harness.sendUserCommand("greet", harness.config().getUserId());
 
             RecordedRequest edit = harness.awaitRequest(
                 request -> request.method().equals("PATCH")
@@ -34,7 +33,7 @@ class MessageUserCommandTest {
     @Test
     void message_command_replies_offline() {
         try (OfflineHarness harness = new OfflineHarness().boot(Duration.ofSeconds(30))) {
-            harness.sendMessageCommand("inspect", TestIds.REPLY_MESSAGE_ID);
+            harness.sendMessageCommand("inspect", harness.config().getReplyMessageId());
 
             RecordedRequest edit = harness.awaitRequest(
                 request -> request.method().equals("PATCH")
