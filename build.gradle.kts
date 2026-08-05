@@ -23,11 +23,11 @@ dependencies {
     api(libs.discord4j)
 
     // JetBrains Annotations
-    // Explicit: this arrived transitively while the harness lived in discord4j-framework
+    // api, not implementation: @NotNull/@Nullable appear on the public signatures
     api(libs.annotations)
 
     // Logging
-    // Explicit for the same reason; @Log generates a Log4j2 logger field
+    // @Log generates a Log4j2 logger field, so the api is needed to compile against
     api(libs.log4j2.api)
 
     // Simplified Annotations
