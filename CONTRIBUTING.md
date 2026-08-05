@@ -1,4 +1,4 @@
-# Contributing to Discord API
+# Contributing to discord4j-fauxrig
 
 Thank you for your interest in contributing! This document explains how to get
 started, what to expect during the review process, and the conventions this
@@ -7,84 +7,57 @@ project follows.
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Development Setup](#development-setup)
-  - [Running the Debug Bot](#running-the-debug-bot)
+- [The one rule](#the-one-rule)
 - [Making Changes](#making-changes)
   - [Branching Strategy](#branching-strategy)
   - [Code Style](#code-style)
   - [Commit Messages](#commit-messages)
   - [Testing](#testing)
+- [Adding a REST route](#adding-a-rest-route)
+- [Adding a dispatch](#adding-a-dispatch)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Reporting Issues](#reporting-issues)
-- [Project Architecture](#project-architecture)
 - [Legal](#legal)
 
 ## Getting Started
-
-### Prerequisites
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | [JDK](https://adoptium.net/) | **21+** | Required |
 | [Git](https://git-scm.com/) | 2.x+ | For cloning and contributing |
 | [IntelliJ IDEA](https://www.jetbrains.com/idea/) | Latest | Recommended IDE |
-| Discord bot token | - | Create one at the [Discord Developer Portal](https://discord.com/developers/applications) |
 
-**Required environment variables:**
-
-| Variable | Description |
-|----------|-------------|
-| `DISCORD_TOKEN` | Discord bot token |
-| `DEVELOPER_ERROR_LOG_CHANNEL_ID` | Discord channel ID for error logging |
-
-### Development Setup
-
-1. **Fork and clone the repository**
-
-   [Fork the repository](https://github.com/SkyBlock-Simplified/discord-api/fork),
-   then clone your fork:
-
-   ```bash
-   git clone https://github.com/<your-username>/discord-api.git
-   cd discord-api
-   ```
-
-2. **Build the project**
-
-   ```bash
-   cd discord-api
-   ./gradlew build
-   ```
-
-3. **Open in IntelliJ IDEA**
-
-   Open the project root as a Gradle project. Ensure the Lombok plugin is
-   installed and annotation processing is enabled.
-
-5. **Verify the setup**
-
-   ```bash
-   ./gradlew test
-   ```
-
-### Running the Debug Bot
-
-A `DebugBot` class in `src/test/` allows testing commands in isolation without
-starting the full bot. Set the required environment variables and run it
-directly from IntelliJ or via Gradle:
+**No environment variables and no Discord bot token are required.** That is the
+point of this project: everything runs offline against a localhost server.
 
 ```bash
-./gradlew test --tests "*.debug.DebugBot"
+git clone https://github.com/<your-username>/discord4j-fauxrig.git
+cd discord4j-fauxrig
+./gradlew build
 ```
+
+Open the project root as a Gradle project. Annotation processing must be enabled
+(the `io.github.simplified-dev:annotations` processor generates the `@Log` logger
+fields and equality pairs).
+
+## The one rule
+
+**fauxrig must never depend on a bot framework or on any particular bot.** It
+stands in for Discord, so its only compile dependencies are Discord4J itself, the
+JetBrains annotations, Log4j2, and the Simplified annotation processor. A change
+that introduces a dependency on a consumer - even a test-scoped one - defeats the
+design and will not be merged.
+
+The corollary: tests in this repository exercise the harness *as a server*. Tests
+that need a real bot on the other end belong in the consuming project.
 
 ## Making Changes
 
 ### Branching Strategy
 
 - Create a feature branch from `master` for your work.
-- Use a descriptive branch name: `fix/modal-submit-handler`,
-  `feat/media-gallery-component`, `docs/response-examples`.
+- Use a descriptive branch name: `fix/modal-submit-payload`,
+  `feat/thread-routes`, `docs/dispatch-table`.
 
 ```bash
 git checkout -b feat/my-feature master
@@ -92,48 +65,38 @@ git checkout -b feat/my-feature master
 
 ### Code Style
 
-#### General
-
-- **Reactive** - All command and listener handlers return `Mono<Void>` using
-  Project Reactor. Never block the event loop.
-- **Collections** - Always use `Concurrent.newList()`, `Concurrent.newMap()`,
-  etc. instead of standard Java collections.
-- **Annotations** - Use `@NotNull` / `@Nullable` from `org.jetbrains.annotations`
-  on all public method parameters and return types.
-- **Lombok** - Use `@Getter`, `@RequiredArgsConstructor`, `@Log4j2`, etc.
-  The logger field is non-static (`lombok.log.fieldIsStatic = false`).
-- **Builder pattern** - Use `ClassBuilder<T>` with `@BuildFlag` validation.
-  Follow the existing pattern in `Response.builder()`, `Page.builder()`,
-  `Button.builder()`, etc.
+- **Annotations** - `@NotNull` / `@Nullable` from `org.jetbrains.annotations` on
+  all public method parameters and return types.
+- **Logging** - `@Log` from the Simplified annotation processor; never
+  `System.out`. Respect the level contract documented in the README (INFO for
+  lifecycle, DEBUG for per-request detail, TRACE for every dispatch, WARN for
+  anything Discord itself would reject).
+- **Sequenced collections** - `.getFirst()` / `.getLast()`, never `.get(0)` or
+  `.get(size() - 1)`.
+- **Control flow** - omit braces on single-line bodies; add them when the body
+  wraps.
 
 #### Javadoc
 
-- **Class level** - Noun phrase describing what the type is.
-- **Method level** - Active verb, third person singular.
-- **Tags** - `@param`, `@return`, `@throws` on public methods. Lowercase
-  sentence fragments, no trailing period. Single space after param name.
-- **Punctuation** - Only single hyphens (` - `) as separators.
+- **Class level** - noun phrase describing what the type is.
+- **Method level** - active verb, third person singular.
+- **Tags** - `@param`, `@return`, `@throws` where applicable. Lowercase sentence
+  fragments, no trailing period. Single space after the param name.
+- **Punctuation** - only single hyphens (` - `) as separators, never em dashes.
 - Never use `@author` or `@since`.
-
-#### Commands
-
-- Every `DiscordCommand` subclass must have a `@Structure` annotation with
-  a unique `name`.
-- Implement `process(C context)` and return `Mono<Void>`.
-- Use `getParameters()` to define slash command options.
 
 ### Commit Messages
 
 Write clear, concise commit messages that describe *what* changed and *why*.
 
 ```
-Add Container component for Discord Components V2
+Serve an application owner so isDeveloper resolves
 
-Implements the new container layout component that wraps other
-components with optional accent color and spoiler support.
+The mock returned no owner on /oauth2/applications/@me, so any consumer
+guarding on developer status saw every user as non-developer.
 ```
 
-- Use the imperative mood ("Add", "Fix", "Update").
+- Use the imperative mood ("Add", "Fix", "Serve").
 - Keep the subject line under 72 characters.
 - Add a body when the *why* isn't obvious from the subject.
 
@@ -143,42 +106,53 @@ Tests use JUnit 5 (Jupiter):
 
 ```bash
 ./gradlew test
+./gradlew test -Dharness.debug=true   # elevate the per-request firehose to INFO
 ```
 
-- The `DebugBot` in `src/test/` is the primary way to test commands
-  interactively against a live Discord gateway.
-- Unit tests for component builders, context logic, and handler state
-  don't require a live connection.
+Every test must pass with no network access. If a change makes the suite depend
+on reaching discord.com, it is a bug in the change.
+
+## Adding a REST route
+
+When a consumer hits an endpoint the mock does not model, `LocalDiscordServer`
+logs a WARN naming the method and path. To add it:
+
+1. Add the route to `rest/Route`.
+2. Build the response body from discord-json builders in `json/HarnessEntities`,
+   not from hand-written JSON strings - the builders keep the shape honest
+   against the Discord4J version in `gradle/libs.versions.toml`.
+3. Cover it in `test/LocalDiscordServerTest`.
+
+## Adding a dispatch
+
+1. Add the builder to the appropriate `gateway/dispatch/*` class
+   (`InteractionDispatches`, `ComponentDispatches`, `MessageDispatches`,
+   `LifecycleDispatches`).
+2. Expose it from `DispatchFactory` so consumers reach it via
+   `harness.dispatches()`.
+3. Cover the payload shape in `test/DispatchFactoryTest`.
+4. Add a row to the dispatch table in the README.
 
 ## Submitting a Pull Request
 
 1. **Push your branch** to your fork.
-
-   ```bash
-   git push origin feat/my-feature
-   ```
-
-2. **Open a Pull Request** against the `master` branch of
-   [SkyBlock-Simplified/discord-api](https://github.com/SkyBlock-Simplified/discord-api).
-
-3. **In the PR description**, include:
-   - A summary of the changes and the motivation behind them.
-   - Steps to test or verify the changes.
-   - Screenshots or recordings of Discord interactions if applicable.
-
+2. **Open a Pull Request** against `master`.
+3. **In the PR description**, include a summary of the change and its motivation,
+   plus the steps to verify it.
 4. **Respond to review feedback.** PRs may go through one or more rounds of
    review before being merged.
 
 ### What gets reviewed
 
-- Correctness of reactive chains (no blocking calls, proper error handling).
-- Adherence to the builder pattern and component type system.
-- Impact on downstream modules (`simplified-bot`).
-- Compatibility with Discord's API and Components V2 flag behavior.
+- That the change keeps fauxrig framework-agnostic (see [The one rule](#the-one-rule)).
+- Fidelity to the real Discord API: status codes, payload shape, and the errors
+  Discord itself would return.
+- Whether a new route or dispatch is covered by a test and documented in the
+  README tables.
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/SkyBlock-Simplified/discord-api/issues)
+Use [GitHub Issues](https://github.com/simplified-dev/discord4j-fauxrig/issues)
 to report bugs or request features.
 
 When reporting a bug, include:
@@ -190,77 +164,8 @@ When reporting a bug, include:
 - **Steps to reproduce**
 - **Expected vs. actual behavior**
 
-## Project Architecture
-
-A brief overview to help you find your way around the codebase:
-
-```
-src/main/java/dev/sbs/discordapi/
-├── DiscordBot.java             # Abstract entry point (configure -> login -> connect)
-├── command/
-│   ├── DiscordCommand.java     # Base command class with @Structure annotation
-│   ├── exception/              # CommandException, PermissionException, InputException, etc.
-│   └── parameter/              # Parameter, Argument
-├── component/
-│   ├── Component.java          # Root component interface
-│   ├── TextDisplay.java        # Text display component (V2)
-│   ├── interaction/            # Button, SelectMenu, TextInput, Modal,
-│   │                           # RadioGroup, Checkbox, CheckboxGroup
-│   ├── layout/                 # ActionRow, Container, Section, Separator, Label
-│   ├── media/                  # Attachment, FileUpload, MediaGallery, Thumbnail
-│   ├── capability/             # EventInteractable, Toggleable, ModalUpdatable,
-│   │                           # UserInteractable
-│   └── scope/                  # AccessoryComponent, ContainerComponent,
-│                               # SectionComponent, TopLevelMessageComponent, etc.
-├── context/
-│   ├── EventContext.java       # Root context interface
-│   ├── command/                # CommandContext, SlashCommandContext, AutoCompleteContext, etc.
-│   ├── component/              # ComponentContext, ButtonContext, SelectMenuContext,
-│   │                           # ModalContext, CheckboxContext, RadioGroupContext, etc.
-│   └── message/                # MessageContext, ReactionContext
-├── exception/                  # DiscordException, DiscordUserException, etc.
-├── handler/
-│   ├── DiscordConfig.java      # Builder-pattern bot configuration
-│   ├── CommandHandler.java     # Command registration and routing
-│   ├── EmojiHandler.java       # Custom emoji upload/lookup
-│   ├── DiscordLocale.java      # BCP 47 locale enum
-│   ├── exception/              # ExceptionHandler, DiscordExceptionHandler,
-│   │                           # SentryExceptionHandler, CompositeExceptionHandler
-│   ├── response/               # ResponseHandler, CachedResponse, ResponseEntry,
-│   │                           # ResponseFollowup
-│   └── shard/                  # ShardHandler, Shard
-├── listener/
-│   ├── command/                # Slash, user, message command listeners
-│   ├── component/              # Button, select menu, modal, checkbox,
-│   │                           # radio group listeners
-│   ├── message/                # Message create/delete, reaction listeners
-│   └── lifecycle/              # Disconnect, guild create listeners
-├── response/
-│   ├── Response.java           # Response interface + TreeResponse/FormResponse
-│   ├── Emoji.java              # Emoji representation
-│   ├── embed/                  # Embed, Author, Field, Footer
-│   ├── handler/                # HistoryHandler, PaginationHandler, OutputHandler,
-│   │   │                       # FilterHandler, SortHandler, SearchHandler
-│   │   └── item/               # ItemHandler, EmbedItemHandler, ComponentItemHandler
-│   └── page/                   # Page, TreePage, FormPage, Paging, Summary, Subpages
-│       └── item/               # Item, AuthorItem, TitleItem, DescriptionItem, etc.
-│           └── field/          # FieldItem, StringItem, NumberItem, ToggleItem, etc.
-└── util/                       # DiscordReference, DiscordDate, DiscordProtocol, ProgressBar
-```
-
-### Key extension points
-
-- **New command** - Extend `DiscordCommand<SlashCommandContext>` (or other
-  context type) and annotate with `@Structure`.
-- **New component** - Implement the relevant `Component` interface and add a
-  builder following the existing pattern.
-- **New listener** - Extend `DiscordListener<T extends Event>` in the
-  `listener/` package. It will be discovered automatically via classpath
-  scanning.
-- **New response type** - Implement the `Response` interface with a custom
-  `HistoryHandler`.
-- **New exception handler** - Extend `ExceptionHandler` and register it via
-  `DiscordConfig` or wrap it in a `CompositeExceptionHandler`.
+A run with `-Dharness.debug=true` attached is worth more than a description; it
+shows exactly which REST calls the bot made and where the pathway stopped.
 
 ## Legal
 

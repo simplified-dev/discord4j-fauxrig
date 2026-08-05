@@ -1,1 +1,1 @@
-rootProject.name = "discord4j-framework"
+rootProject.name = "discord4j-fauxrig"
