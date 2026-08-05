@@ -118,7 +118,7 @@ When a consumer hits an endpoint the mock does not model, `LocalDiscordServer`
 logs a WARN naming the method and path. To add it:
 
 1. Add the route to `rest/Route`.
-2. Build the response body from discord-json builders in `json/HarnessEntities`,
+2. Build the response body from discord-json builders in `json/DiscordEntities`,
    not from hand-written JSON strings - the builders keep the shape honest
    against the Discord4J version in `gradle/libs.versions.toml`.
 3. Cover it in `test/LocalDiscordServerTest`.

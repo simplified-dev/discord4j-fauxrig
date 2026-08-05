@@ -1,8 +1,8 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
+import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.gateway.SlashOption;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.discordjson.json.ApplicationCommandInteractionData;
 import discord4j.discordjson.json.ApplicationCommandInteractionOptionData;
@@ -27,11 +27,11 @@ public final class InteractionDispatches {
     private static final long SLASH_INTERACTION_ID = 950000000000000010L;
     private static final long CONTEXT_MENU_INTERACTION_ID = 950000000000000013L;
 
-    private final HarnessConfig config;
-    private final HarnessEntities entities;
+    private final FauxConfig config;
+    private final DiscordEntities entities;
     private final Interactions interactions;
 
-    public InteractionDispatches(@NotNull HarnessConfig config, @NotNull HarnessEntities entities) {
+    public InteractionDispatches(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
         this.config = config;
         this.entities = entities;
         this.interactions = new Interactions(config, entities);
@@ -40,7 +40,7 @@ public final class InteractionDispatches {
     /**
      * Builds an {@code INTERACTION_CREATE} (type 2, chat input) dispatch for a top-level slash command with no
      * guild context, so the command runs as a private-channel interaction (skipping bot-permission and channel
-     * resolution). The command id is derived from the name via {@link HarnessConfig#commandId}.
+     * resolution). The command id is derived from the name via {@link FauxConfig#commandId}.
      *
      * @param name the slash command name
      * @param options the resolved top-level options, if any

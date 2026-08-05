@@ -3,8 +3,8 @@ package dev.simplified.discordfauxrig.rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import dev.simplified.annotations.RequiredArgsConstructor;
 import dev.simplified.annotations.Log;
 import org.apache.logging.log4j.Level;
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * synthetic ids, and records every request for assertions.
  * <p>
  * The endpoint list lives in the {@link Route} table; {@code start()} loads it and appends a catch-all. The
- * response bodies come from the shared {@link HarnessEntities}, so this class holds only server plumbing.
+ * response bodies come from the shared {@link DiscordEntities}, so this class holds only server plumbing.
  */
 @Log
 @RequiredArgsConstructor
@@ -44,8 +44,8 @@ public final class LocalDiscordServer {
     private final List<RecordedRequest> requests = new CopyOnWriteArrayList<>();
     // Interaction tokens already acknowledged (via a callback); a repeat is the "already acknowledged" bug.
     private final Set<String> acknowledgedTokens = ConcurrentHashMap.newKeySet();
-    private final HarnessConfig config;
-    private final HarnessEntities entities;
+    private final FauxConfig config;
+    private final DiscordEntities entities;
     private DisposableServer server;
 
     /**

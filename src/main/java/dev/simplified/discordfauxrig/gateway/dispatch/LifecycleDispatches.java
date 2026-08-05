@@ -1,7 +1,7 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.PartialApplicationInfoData;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.discordjson.json.gateway.Ready;
@@ -18,10 +18,10 @@ import java.util.List;
 @Log
 public final class LifecycleDispatches {
 
-    private final HarnessConfig config;
-    private final HarnessEntities entities;
+    private final FauxConfig config;
+    private final DiscordEntities entities;
 
-    public LifecycleDispatches(@NotNull HarnessConfig config, @NotNull HarnessEntities entities) {
+    public LifecycleDispatches(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
         this.config = config;
         this.entities = entities;
     }

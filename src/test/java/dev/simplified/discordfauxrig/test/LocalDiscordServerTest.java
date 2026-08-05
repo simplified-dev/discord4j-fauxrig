@@ -1,7 +1,7 @@
 package dev.simplified.discordfauxrig.test;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import dev.simplified.discordfauxrig.rest.LocalDiscordServer;
 import io.netty.handler.codec.http.HttpMethod;
 import org.jetbrains.annotations.Nullable;
@@ -21,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class LocalDiscordServerTest {
 
-    private final HarnessConfig config = HarnessConfig.builder().build();
+    private final FauxConfig config = FauxConfig.builder().build();
     private LocalDiscordServer server;
 
     @BeforeEach
     void start() {
-        this.server = new LocalDiscordServer(this.config, new HarnessEntities(this.config)).start();
+        this.server = new LocalDiscordServer(this.config, new DiscordEntities(this.config)).start();
     }
 
     @AfterEach

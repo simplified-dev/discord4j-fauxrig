@@ -33,14 +33,14 @@ Discord4J's **real** pipeline - `DispatchHandlers` -> events -> entities -> list
 there.
 
 ```
-OfflineHarness (AutoCloseable aggregate, one fresh deployment per instance)
-    ├── HarnessConfig        — the deterministic identity shared by every piece
-    ├── HarnessEntities      — JSON entity factory, built from discord-json builders
-    ├── LocalDiscordServer   — reactor-netty REST server; records every request
-    │       └── Route        — package-private enum: the declarative route table
-    └── FakeGatewayClient    — in-JVM GatewayClient, no socket
-            └── DispatchFactory — builds simulated dispatches for the identity
-                    └── gateway/dispatch/* — the per-kind dispatch builders
+FauxDiscord (AutoCloseable aggregate, one fresh deployment per instance)
+    ├── FauxConfig             - the deterministic identity shared by every piece
+    ├── DiscordEntities        - discord-json entity factory (typed entities + REST bodies)
+    ├── LocalDiscordServer     - reactor-netty REST server; records every request
+    │       └── Route          - package-private enum: the declarative route table
+    └── FauxGatewayClient      - in-JVM GatewayClient, no socket
+            └── DispatchFactory        - builds simulated dispatches for the identity
+                    └── gateway/dispatch/*  - the per-kind dispatch builders
 ```
 
 ## The hard architectural rule
@@ -54,12 +54,12 @@ Practical consequences when editing here:
 - No `implementation`/`api` dependency on a consumer, and no test-scoped one either.
 - Tests in `src/test/` exercise the harness **as a server**: they assert on payload shape, route matching,
   and entity JSON. A test that needs a real bot on the other end belongs in the consuming repository.
-- `OfflineHarness` deliberately exposes seams (`baseUrl()`, `gateway()`, `dispatches()`) rather than booting
+- `FauxDiscord` deliberately exposes seams (`baseUrl()`, `gateway()`, `dispatches()`) rather than booting
   anything itself. It has no idea what a command or a response is.
 
 ## Key types
 
-**`OfflineHarness`** - the aggregate and the public API surface. Owns the config, entities, server, gateway,
+**`FauxDiscord`** - the aggregate and the public API surface. Owns the config, entities, server, gateway,
 and dispatch factory; each instance is one fresh deployment. Beyond the seams it exposes the assertion
 helpers: `requests()`, `awaitRequest(predicate[, timeout])`, `awaitInteractionReply()` (last
 `PATCH .../messages/@original`), `awaitInteractionCallback()` (last `POST .../callback`),
@@ -70,11 +70,11 @@ mutated on the bot's reactive and netty threads with nothing to latch onto. A bo
 harness primitive here - do not "fix" it into a latch without a signal to latch onto. On timeout it throws
 `IllegalStateException` carrying the recorded requests, which is usually the whole diagnosis.
 
-**`HarnessConfig`** - the deterministic identity: ids, a structurally-valid fake token (its first segment
+**`FauxConfig`** - the deterministic identity: ids, a structurally-valid fake token (its first segment
 base64-decodes to the bot id, matching `TokenUtil.getSelfId`, or Discord4J's login rejects it), and the
 command-id scheme. `config.commandId(name)` derives ids from the command name so the mock's bulk-overwrite
 echo and later simulated interactions agree on the same id. `debug` defaults to
-`Boolean.getBoolean("harness.debug")`. Built via `HarnessConfig.builder().build()` and threaded into the
+`Boolean.getBoolean("harness.debug")`. Built via `FauxConfig.builder().build()` and threaded into the
 server, entities, and dispatch factory at construction.
 
 **`LocalDiscordServer`** (`rest/`) - a reactor-netty HTTP server serving the endpoints a bot touches, and
@@ -88,11 +88,11 @@ with synthetic ids, `NO_CONTENT` acknowledges with 204). Registered in declarati
 catch-all, so **order matters**: a broad pattern placed above a narrow one shadows it. Snowflake path params
 are `[^/]+`, or `\\d+` where the real endpoint is numeric.
 
-**`HarnessEntities`** (`json/`) - builds every response body from **discord-json builders**, never
+**`DiscordEntities`** (`json/`) - builds every response body from **discord-json builders**, never
 hand-written JSON strings. This is deliberate: the builders fail to compile when the pinned Discord4J version
 changes a payload shape, so the mock cannot silently drift from the real API.
 
-**`FakeGatewayClient`** (`gateway/`) - implements `discord4j.gateway.GatewayClient` with no socket. `execute`
+**`FauxGatewayClient`** (`gateway/`) - implements `discord4j.gateway.GatewayClient` with no socket. `execute`
 replays the handshake (a `READY` plus `GatewayStateChange.connected()`) into a `Sinks.many().replay().all()`
 dispatch sink, then parks on `Mono.never()`. The replay sink matters: a consumer that subscribes late still
 receives the handshake. `emit(dispatch)` pushes further dispatches into the live pipeline. `receiver()`,
@@ -129,7 +129,7 @@ a contract consumers rely on, documented in the README:
 - **Annotations** - `@NotNull`/`@Nullable` from `org.jetbrains.annotations` on public params and returns.
 - **Sequenced collections** - `.getFirst()`/`.getLast()`, never `.get(0)`/`.get(size() - 1)`.
 - **Control flow** - omit braces on single-line bodies; add them when the body wraps.
-- **Adding a route**: add the constant to `Route`, build the body in `HarnessEntities`, cover it in
+- **Adding a route**: add the constant to `Route`, build the body in `DiscordEntities`, cover it in
   `LocalDiscordServerTest`.
 - **Adding a dispatch**: add the builder to the right `gateway/dispatch/*` class, expose it from
   `DispatchFactory`, cover the payload shape in `DispatchFactoryTest`, add a README table row.

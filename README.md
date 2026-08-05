@@ -13,7 +13,7 @@ points one way: **consumer → fauxrig**.
 
 - [Installation](#installation)
 - [Connecting a bot](#connecting-a-bot)
-- [Harness API](#harness-api-offlineharness)
+- [FauxDiscord API](#fauxdiscord-api)
 - [Building dispatches](#building-dispatches-dispatchfactory-via-dispatches)
 - [Inspecting what the bot sent](#inspecting-what-the-bot-sent-renderedmessage)
 - [Ids and tokens](#ids-and-tokens)
@@ -48,10 +48,10 @@ Point the bot's REST client at the local server and hand it the fake gateway. Bo
 no-op by default:
 
 ```java
-OfflineHarness harness = new OfflineHarness();               // fresh REST mock + fake gateway
-// wire your bot's config to the harness:
-//   .withApiBaseUrl(harness.baseUrl())                      // REST -> localhost mock
-//   .withGatewayClientFactory(options -> harness.gateway()) // gateway -> in-JVM fake
+FauxDiscord discord = new FauxDiscord();                    // fresh REST mock + fake gateway
+// wire your bot's config to it:
+//   .withApiBaseUrl(discord.baseUrl())                      // REST -> localhost mock
+//   .withGatewayClientFactory(options -> discord.gateway()) // gateway -> in-JVM fake
 //   .withRestReactorResources(plaintextRest)                // plaintext http to localhost (no TLS)
 // then boot the bot and wait for it to report connected.
 ```
@@ -62,21 +62,21 @@ The exact wiring calls depend on your bot's configuration layer; what fauxrig ne
 Drive events by emitting a dispatch built by the factory, then assert on the recorded REST traffic:
 
 ```java
-harness.gateway().emit(harness.dispatches().slashCommand("ping"));  // push /ping
-RecordedRequest reply = harness.awaitInteractionReply();            // last PATCH .../messages/@original
+discord.gateway().emit(discord.dispatches().slashCommand("ping"));  // push /ping
+RecordedRequest reply = discord.awaitInteractionReply();            // last PATCH .../messages/@original
 assertTrue(reply.bodyContains("pong"));
 ```
 
-`OfflineHarness` is `AutoCloseable`; use it in try-with-resources so the server and gateway are torn down.
+`FauxDiscord` is `AutoCloseable`; use it in try-with-resources so the server and gateway are torn down.
 
-## Harness API (`OfflineHarness`)
+## FauxDiscord API
 
 | Call | Does |
 |---|---|
 | `baseUrl()` | REST base url of the localhost mock (for your bot's config) |
 | `gateway()` | the fake gateway; `gateway().emit(dispatch)` pushes a raw dispatch |
 | `dispatches()` | the `DispatchFactory` (see below) |
-| `config()` | the `HarnessConfig` identity backing this run |
+| `config()` | the `FauxConfig` identity backing this run |
 | `requests()` | all recorded requests, in order |
 | `awaitRequest(predicate[, timeout])` | last request matching the predicate (default 10s) |
 | `awaitInteractionReply()` | last `PATCH .../messages/@original` |
@@ -114,13 +114,13 @@ for example to assert a specific button's custom id, or that a select menu carri
 
 ## Ids and tokens
 
-`HarnessConfig` (built via `HarnessConfig.builder().build()`) holds the canonical ids and a
+`FauxConfig` (built via `FauxConfig.builder().build()`) holds the canonical ids and a
 structurally-valid fake token (its first segment base64-decodes to the bot id, matching
-`TokenUtil.getSelfId`). It is passed to `OfflineHarness`, `LocalDiscordServer`, and `DispatchFactory` at
-construction; reach it via `harness.config()`. Command ids are derived deterministically from the command
+`TokenUtil.getSelfId`). It is passed to `FauxDiscord`, `LocalDiscordServer`, and `DispatchFactory` at
+construction; reach it via `discord.config()`. Command ids are derived deterministically from the command
 name (`config.commandId(name)`) so the mock's bulk-overwrite echo and simulated interactions agree. The REST
 mock mints `config.getReplyMessageId()` for every reply and followup message. Pass a customized
-`HarnessConfig` to change the identity.
+`FauxConfig` to change the identity.
 
 ## Debugging
 
@@ -150,24 +150,24 @@ the fastest way to see how far a pathway got:
 
 ```
 src/main/java/dev/simplified/discordfauxrig/
-├── OfflineHarness.java          # the aggregate: owns the pieces below, exposes the assertion API
-├── HarnessConfig.java           # the deterministic identity (ids, fake token, command-id scheme)
+├── FauxDiscord.java             # the aggregate: owns the pieces below, exposes the assertion API
+├── FauxConfig.java              # the deterministic identity (ids, fake token, command-id scheme)
 ├── rest/
 │   ├── LocalDiscordServer.java  # reactor-netty server implementing the REST routes a bot touches
 │   ├── Route.java               # the route table
 │   ├── RecordedRequest.java     # one captured request
 │   └── RenderedMessage.java     # parses an outbound payload into a structured view
 ├── gateway/
-│   ├── FakeGatewayClient.java   # in-JVM GatewayClient (no socket); replays a handshake, accepts pushes
+│   ├── FauxGatewayClient.java   # in-JVM GatewayClient (no socket); replays a handshake, accepts pushes
 │   ├── DispatchFactory.java     # builds simulated dispatches for an identity
 │   ├── SlashOption.java         # a resolved leaf option
 │   └── dispatch/                # ComponentDispatches, InteractionDispatches, Interactions,
 │                                # LifecycleDispatches, MessageDispatches
 └── json/
-    └── HarnessEntities.java     # JSON entity factory (users, channels, guilds, messages)
+    └── DiscordEntities.java     # JSON entity factory (users, channels, guilds, messages)
 ```
 
-`FakeGatewayClient` replays a `READY` + `GatewayStateChange.connected()` handshake so login completes, then
+`FauxGatewayClient` replays a `READY` + `GatewayStateChange.connected()` handshake so login completes, then
 lets you push further dispatches into Discord4J's *real* pipeline (`DispatchHandlers` -> events -> entities
 -> listeners). Nothing is stubbed downstream of the socket.
 

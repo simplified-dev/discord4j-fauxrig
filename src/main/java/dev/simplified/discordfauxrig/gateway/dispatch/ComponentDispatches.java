@@ -1,7 +1,7 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.ApplicationCommandInteractionData;
 import discord4j.discordjson.json.ComponentData;
 import discord4j.discordjson.json.gateway.Dispatch;
@@ -21,10 +21,10 @@ public final class ComponentDispatches {
     private static final long COMPONENT_INTERACTION_ID = 950000000000000011L;
     private static final long MODAL_INTERACTION_ID = 950000000000000012L;
 
-    private final HarnessEntities entities;
+    private final DiscordEntities entities;
     private final Interactions interactions;
 
-    public ComponentDispatches(@NotNull HarnessConfig config, @NotNull HarnessEntities entities) {
+    public ComponentDispatches(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
         this.entities = entities;
         this.interactions = new Interactions(config, entities);
     }

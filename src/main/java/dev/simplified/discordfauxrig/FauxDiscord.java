@@ -1,8 +1,8 @@
 package dev.simplified.discordfauxrig;
 
 import dev.simplified.discordfauxrig.gateway.DispatchFactory;
-import dev.simplified.discordfauxrig.gateway.FakeGatewayClient;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.gateway.FauxGatewayClient;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import dev.simplified.discordfauxrig.rest.LocalDiscordServer;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
 import discord4j.discordjson.json.gateway.Dispatch;
@@ -15,27 +15,27 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
 /**
- * The server side of the offline harness: a localhost REST mock, a fake in-JVM gateway, and the deterministic
- * identity ({@link HarnessConfig}) the two share. It stands in for Discord itself and knows nothing about any
- * bot - a consumer wires its own {@code DiscordBot} to {@link #baseUrl()} and {@link #gateway()}, drives
- * dispatches built by {@link #dispatches()}, and asserts on the captured REST traffic exposed here.
+ * A stand-in for Discord itself: a localhost REST mock, a fake in-JVM gateway, and the deterministic identity
+ * ({@link FauxConfig}) the two share. It knows nothing about any bot - a consumer wires its own
+ * {@code DiscordBot} to {@link #baseUrl()} and {@link #gateway()}, drives dispatches built by
+ * {@link #dispatches()}, and asserts on the captured REST traffic exposed here.
  * <p>
- * Each instance is one fresh deployment: server, gateway, and dispatch factory are recreated per harness.
+ * Each instance is one fresh deployment: server, gateway, and dispatch factory are recreated per instance.
  * <p>
  * Narrates construction and teardown through Log4j2; raise the {@code dev.simplified.discordfauxrig}
  * logger to DEBUG or TRACE to see the REST and dispatch detail.
  */
 @Log
-public final class OfflineHarness implements AutoCloseable {
+public final class FauxDiscord implements AutoCloseable {
 
-    private final HarnessConfig config;
+    private final FauxConfig config;
     private final LocalDiscordServer server;
-    private final FakeGatewayClient gatewayClient;
+    private final FauxGatewayClient gatewayClient;
     private final DispatchFactory dispatchFactory;
 
-    /** Boots with the standard harness identity ({@code HarnessConfig.builder().build()}). */
-    public OfflineHarness() {
-        this(HarnessConfig.builder().build());
+    /** Boots with the standard harness identity ({@code FauxConfig.builder().build()}). */
+    public FauxDiscord() {
+        this(FauxConfig.builder().build());
     }
 
     /**
@@ -43,20 +43,20 @@ public final class OfflineHarness implements AutoCloseable {
      *
      * @param config the harness identity to use
      */
-    public OfflineHarness(@NotNull HarnessConfig config) {
+    public FauxDiscord(@NotNull FauxConfig config) {
         this.config = config;
-        HarnessEntities entities = new HarnessEntities(config);
+        DiscordEntities entities = new DiscordEntities(config);
         this.dispatchFactory = new DispatchFactory(config, entities);
         this.server = new LocalDiscordServer(config, entities).start();
 
         List<Dispatch> handshake = this.dispatchFactory.handshake(config.getBotId());
-        this.gatewayClient = new FakeGatewayClient(handshake, 1);
+        this.gatewayClient = new FauxGatewayClient(handshake, 1);
 
-        log.info("Offline harness server constructed: botId={} guildId={} REST base {}", config.getBotId(), config.getGuildId(), this.server.baseUrl());
+        log.info("Faux Discord constructed: botId={} guildId={} REST base {}", config.getBotId(), config.getGuildId(), this.server.baseUrl());
     }
 
     /** The harness identity backing this run (ids, token, command-id scheme). */
-    public @NotNull HarnessConfig config() {
+    public @NotNull FauxConfig config() {
         return this.config;
     }
 
@@ -66,7 +66,7 @@ public final class OfflineHarness implements AutoCloseable {
     }
 
     /** The fake in-JVM gateway; wire it via {@code withGatewayClientFactory} and push dispatches with {@code emit}. */
-    public @NotNull FakeGatewayClient gateway() {
+    public @NotNull FauxGatewayClient gateway() {
         return this.gatewayClient;
     }
 
@@ -171,7 +171,7 @@ public final class OfflineHarness implements AutoCloseable {
 
     @Override
     public void close() {
-        log.debug("Closing harness");
+        log.debug("Closing faux Discord");
         this.gatewayClient.close(false).subscribe();
         this.server.stop();
     }

@@ -2,8 +2,8 @@ package dev.simplified.discordfauxrig.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.ApplicationInfoData;
 import discord4j.discordjson.json.ChannelData;
 import discord4j.discordjson.json.EmojiData;
@@ -17,14 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Confirms every {@link HarnessEntities} body round-trips: the JSON it emits deserializes back into the
+ * Confirms every {@link DiscordEntities} body round-trips: the JSON it emits deserializes back into the
  * discord-json immutable Discord4J expects, with the identifying fields intact. Catches a malformed or
  * mistyped entity builder that the wire format would otherwise reject at runtime.
  */
-class HarnessEntitiesTest {
+class DiscordEntitiesTest {
 
-    private final HarnessConfig config = HarnessConfig.builder().build();
-    private final HarnessEntities entities = new HarnessEntities(this.config);
+    private final FauxConfig config = FauxConfig.builder().build();
+    private final DiscordEntities entities = new DiscordEntities(this.config);
     private final ObjectMapper mapper = this.entities.mapper();
 
     @Test

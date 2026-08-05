@@ -1,10 +1,10 @@
 package dev.simplified.discordfauxrig.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.simplified.discordfauxrig.HarnessConfig;
+import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.gateway.DispatchFactory;
 import dev.simplified.discordfauxrig.gateway.SlashOption;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.InteractionData;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.discordjson.json.gateway.InteractionCreate;
@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class DispatchFactoryTest {
 
-    private final HarnessConfig config = HarnessConfig.builder().build();
-    private final HarnessEntities entities = new HarnessEntities(this.config);
+    private final FauxConfig config = FauxConfig.builder().build();
+    private final DiscordEntities entities = new DiscordEntities(this.config);
     private final DispatchFactory factory = new DispatchFactory(this.config, this.entities);
     private final ObjectMapper mapper = this.entities.mapper();
 

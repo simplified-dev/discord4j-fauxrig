@@ -1,6 +1,6 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.discordjson.json.gateway.MessageCreate;
 import dev.simplified.annotations.Log;
@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 @Log
 public final class MessageDispatches {
 
-    private final HarnessEntities entities;
+    private final DiscordEntities entities;
 
-    public MessageDispatches(@NotNull HarnessEntities entities) {
+    public MessageDispatches(@NotNull DiscordEntities entities) {
         this.entities = entities;
     }
 

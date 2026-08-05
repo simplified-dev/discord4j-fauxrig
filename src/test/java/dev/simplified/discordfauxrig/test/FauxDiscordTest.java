@@ -1,6 +1,6 @@
 package dev.simplified.discordfauxrig.test;
 
-import dev.simplified.discordfauxrig.OfflineHarness;
+import dev.simplified.discordfauxrig.FauxDiscord;
 import io.netty.handler.codec.http.HttpMethod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,17 +14,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Exercises the {@link OfflineHarness} server aggregate: it wires the REST mock, the fake gateway, and the
+ * Exercises the {@link FauxDiscord} server aggregate: it wires the REST mock, the fake gateway, and the
  * dispatch factory, records requests for assertions, emits dispatches, and tears down. Framework-free - no bot
  * is booted.
  */
-class OfflineHarnessTest {
+class FauxDiscordTest {
 
-    private OfflineHarness harness;
+    private FauxDiscord harness;
 
     @BeforeEach
     void boot() {
-        this.harness = new OfflineHarness();
+        this.harness = new FauxDiscord();
     }
 
     @AfterEach
@@ -74,7 +74,7 @@ class OfflineHarnessTest {
 
     @Test
     void close_stops_the_rest_mock() {
-        try (OfflineHarness closable = new OfflineHarness()) {
+        try (FauxDiscord closable = new FauxDiscord()) {
             String url = closable.baseUrl() + "/users/@me";
             assertNotNull(HttpProbe.get(url)); // reachable while open
             closable.close();

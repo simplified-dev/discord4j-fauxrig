@@ -9,20 +9,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * Standalone configuration for the offline harness: the canonical snowflake ids, a structurally-valid fake
- * bot token, the fake gateway endpoint, and the deterministic command-id scheme shared by the REST mock and
- * the simulated dispatches.
+ * The identity a {@link FauxDiscord} runs under: the canonical snowflake ids, a structurally-valid fake bot
+ * token, the fake gateway endpoint, and the deterministic command-id scheme shared by the REST mock and the
+ * simulated dispatches.
  *
  * <p>
- * Built via {@link #builder()}; every value has a sensible default, so {@code HarnessConfig.builder().build()}
- * yields the standard harness identity. The instance is passed to {@link OfflineHarness},
+ * Built via {@link #builder()}; every value has a sensible default, so {@code FauxConfig.builder().build()}
+ * yields the standard identity. The instance is passed to {@link FauxDiscord},
  * {@link dev.simplified.discordfauxrig.rest.LocalDiscordServer LocalDiscordServer}, and
  * {@link dev.simplified.discordfauxrig.gateway.DispatchFactory DispatchFactory} at construction, so a test
  * can vary the identity by supplying a customized config. This is deliberately NOT a
- * {@code DiscordConfig} - it is harness-only metadata.
+ * {@code DiscordConfig} - it is fauxrig-only metadata.
  */
 @Getter
-public final class HarnessConfig {
+public final class FauxConfig {
 
     /** The bot's user id. */
     private final long botId;
@@ -63,7 +63,7 @@ public final class HarnessConfig {
     /** Whether the REST mock prints every request it receives (defaults to the {@code harness.debug} property). */
     private final boolean debug;
 
-    private HarnessConfig(@NotNull Builder builder) {
+    private FauxConfig(@NotNull Builder builder) {
         this.botId = builder.botId;
         this.applicationId = builder.applicationId != null ? builder.applicationId : builder.botId;
         this.guildId = builder.guildId;
@@ -111,7 +111,7 @@ public final class HarnessConfig {
         return head + ".Gfake0." + "0123456789abcdefghijklmnopqrstuvwxyz";
     }
 
-    /** Builder for {@link HarnessConfig}, carrying the default harness identity. */
+    /** Builder for {@link FauxConfig}, carrying the default harness identity. */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Builder {
 
@@ -208,8 +208,8 @@ public final class HarnessConfig {
         }
 
         /** Builds the config, defaulting the application id to the bot id and the token to a derived value. */
-        public @NotNull HarnessConfig build() {
-            return new HarnessConfig(this);
+        public @NotNull FauxConfig build() {
+            return new FauxConfig(this);
         }
 
     }

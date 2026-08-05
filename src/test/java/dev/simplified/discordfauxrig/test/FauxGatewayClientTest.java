@@ -1,6 +1,6 @@
 package dev.simplified.discordfauxrig.test;
 
-import dev.simplified.discordfauxrig.gateway.FakeGatewayClient;
+import dev.simplified.discordfauxrig.gateway.FauxGatewayClient;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.gateway.retry.GatewayStateChange;
 import org.junit.jupiter.api.Test;
@@ -13,16 +13,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Exercises the in-JVM {@link FakeGatewayClient}: {@code execute} replays its handshake, {@code emit} pushes
+ * Exercises the in-JVM {@link FauxGatewayClient}: {@code execute} replays its handshake, {@code emit} pushes
  * dispatches into the pipeline, {@code close} completes it, and the metadata accessors report the stand-in
  * values login relies on. Framework-free.
  */
-class FakeGatewayClientTest {
+class FauxGatewayClientTest {
 
     @Test
     void execute_replays_the_handshake() {
         List<Dispatch> handshake = List.of(GatewayStateChange.connected(), GatewayStateChange.connected());
-        FakeGatewayClient client = new FakeGatewayClient(handshake, 1);
+        FauxGatewayClient client = new FauxGatewayClient(handshake, 1);
 
         Disposable execution = client.execute("ws://ignored").subscribe();
 
@@ -34,7 +34,7 @@ class FakeGatewayClientTest {
 
     @Test
     void emit_pushes_into_the_dispatch_flux() {
-        FakeGatewayClient client = new FakeGatewayClient(List.of(), 1);
+        FauxGatewayClient client = new FauxGatewayClient(List.of(), 1);
 
         client.emit(GatewayStateChange.connected());
 
@@ -43,7 +43,7 @@ class FakeGatewayClientTest {
 
     @Test
     void close_completes_the_dispatch_flux() {
-        FakeGatewayClient client = new FakeGatewayClient(List.of(), 1);
+        FauxGatewayClient client = new FauxGatewayClient(List.of(), 1);
         client.emit(GatewayStateChange.connected());
 
         client.close(false).block(Duration.ofSeconds(5));
@@ -55,7 +55,7 @@ class FakeGatewayClientTest {
 
     @Test
     void reports_the_stand_in_metadata() {
-        FakeGatewayClient client = new FakeGatewayClient(List.of(), 3);
+        FauxGatewayClient client = new FauxGatewayClient(List.of(), 3);
 
         assertEquals(3, client.getShardCount());
         assertEquals("fake-session", client.getSessionId());

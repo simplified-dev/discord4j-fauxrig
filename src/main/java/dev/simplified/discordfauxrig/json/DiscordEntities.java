@@ -1,6 +1,6 @@
 package dev.simplified.discordfauxrig.json;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
+import dev.simplified.discordfauxrig.FauxConfig;
 import discord4j.common.JacksonResources;
 import discord4j.core.object.entity.Guild;
 import discord4j.discordjson.Id;
@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The single home for the fake discord-json entities the harness fabricates: the typed immutables the
- * dispatch factory embeds in gateway events, and the JSON bodies the REST mock serves. Both are built through
+ * The single home for the fake discord-json entities fauxrig fabricates: the typed immutables the dispatch
+ * factory embeds in gateway events, and the JSON bodies the REST mock serves. Both are built through
  * Discord4J's own immutable builders and mapper, so they stay in step with Discord4J updates and serialize
  * exactly as the bot expects.
  * <p>
@@ -35,7 +35,7 @@ import java.util.Optional;
  */
 @Log
 @RequiredArgsConstructor
-public final class HarnessEntities {
+public final class DiscordEntities {
 
     // Empty list container returned by GET application emojis; not a Discord entity, so kept as a literal.
     private static final String EMPTY_EMOJIS_JSON = "{\"items\":[]}";
@@ -45,7 +45,7 @@ public final class HarnessEntities {
 
     // Discord4J's own mapper, so the discord-json immutables below serialize exactly as the bot expects.
     private final ObjectMapper mapper = JacksonResources.create().getObjectMapper();
-    private final HarnessConfig config;
+    private final FauxConfig config;
 
     /** Discord4J's mapper, shared so request-echo logic serializes with the same configuration. */
     public @NotNull ObjectMapper mapper() {

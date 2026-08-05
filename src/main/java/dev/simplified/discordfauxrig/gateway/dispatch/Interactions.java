@@ -1,7 +1,7 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.FauxConfig;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.ImmutableInteractionData;
 import discord4j.discordjson.json.InteractionData;
 import discord4j.discordjson.json.gateway.Dispatch;
@@ -14,10 +14,10 @@ import org.jetbrains.annotations.NotNull;
  */
 final class Interactions {
 
-    private final HarnessConfig config;
-    private final HarnessEntities entities;
+    private final FauxConfig config;
+    private final DiscordEntities entities;
 
-    Interactions(@NotNull HarnessConfig config, @NotNull HarnessEntities entities) {
+    Interactions(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
         this.config = config;
         this.entities = entities;
     }

@@ -28,14 +28,14 @@ import java.util.function.Function;
  * it logs its own handshake replay and close at DEBUG and every emitted dispatch at TRACE to fill the gap.
  */
 @Log
-public final class FakeGatewayClient implements GatewayClient {
+public final class FauxGatewayClient implements GatewayClient {
 
     private final Sinks.Many<Dispatch> dispatchSink = Sinks.many().replay().all();
     private final Sinks.Many<GatewayPayload<?>> senderSink = Sinks.many().multicast().onBackpressureBuffer();
     private final List<Dispatch> handshake;
     private final int shardCount;
 
-    public FakeGatewayClient(@NotNull List<Dispatch> handshake, int shardCount) {
+    public FauxGatewayClient(@NotNull List<Dispatch> handshake, int shardCount) {
         this.handshake = List.copyOf(handshake);
         this.shardCount = shardCount;
     }

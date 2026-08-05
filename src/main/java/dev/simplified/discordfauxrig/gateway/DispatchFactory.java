@@ -1,11 +1,11 @@
 package dev.simplified.discordfauxrig.gateway;
 
-import dev.simplified.discordfauxrig.HarnessConfig;
+import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.gateway.dispatch.ComponentDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.InteractionDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.LifecycleDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.MessageDispatches;
-import dev.simplified.discordfauxrig.json.HarnessEntities;
+import dev.simplified.discordfauxrig.json.DiscordEntities;
 import discord4j.discordjson.json.ComponentData;
 import discord4j.discordjson.json.gateway.Dispatch;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +30,7 @@ public final class DispatchFactory {
     private final ComponentDispatches components;
     private final MessageDispatches messages;
 
-    public DispatchFactory(@NotNull HarnessConfig config, @NotNull HarnessEntities entities) {
+    public DispatchFactory(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
         this.lifecycle = new LifecycleDispatches(config, entities);
         this.interactions = new InteractionDispatches(config, entities);
         this.components = new ComponentDispatches(config, entities);
