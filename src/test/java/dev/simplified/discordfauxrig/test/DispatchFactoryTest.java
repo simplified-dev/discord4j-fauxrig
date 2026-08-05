@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.gateway.DispatchFactory;
 import dev.simplified.discordfauxrig.gateway.SlashOption;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import discord4j.discordjson.json.InteractionData;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.discordjson.json.gateway.InteractionCreate;

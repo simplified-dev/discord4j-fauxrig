@@ -1,25 +1,21 @@
 package dev.simplified.discordfauxrig.test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.simplified.discordfauxrig.FauxConfig;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
-import discord4j.discordjson.json.ApplicationInfoData;
-import discord4j.discordjson.json.ChannelData;
-import discord4j.discordjson.json.EmojiData;
-import discord4j.discordjson.json.GatewayData;
-import discord4j.discordjson.json.GuildUpdateData;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import discord4j.discordjson.json.MessageData;
+import discord4j.discordjson.json.PartialUserData;
 import discord4j.discordjson.json.UserData;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Confirms every {@link DiscordEntities} body round-trips: the JSON it emits deserializes back into the
- * discord-json immutable Discord4J expects, with the identifying fields intact. Catches a malformed or
- * mistyped entity builder that the wire format would otherwise reject at runtime.
+ * Confirms every typed {@link DiscordEntities} immutable serializes and re-reads as the discord-json type
+ * Discord4J expects, with the identifying fields intact. These are the entities the dispatch factory embeds
+ * in gateway events, so a malformed one surfaces as a deserialization failure deep in Discord4J's pipeline.
  */
 class DiscordEntitiesTest {
 
@@ -28,81 +24,46 @@ class DiscordEntitiesTest {
     private final ObjectMapper mapper = this.entities.mapper();
 
     @Test
-    void self_user_round_trips() throws Exception {
-        UserData user = this.mapper.readValue(this.entities.userJson(), UserData.class);
-        assertEquals(this.config.getBotId(), user.id().asLong());
-        assertEquals("TestBot", user.username());
-    }
-
-    @Test
-    void gateway_round_trips() throws Exception {
-        GatewayData gateway = this.mapper.readValue(this.entities.gatewayJson(), GatewayData.class);
-        assertEquals(this.config.getGatewayUrl(), gateway.url());
-    }
-
-    @Test
-    void gateway_bot_carries_session_limits() throws Exception {
-        GatewayData gateway = this.mapper.readValue(this.entities.gatewayBotJson(), GatewayData.class);
-        assertEquals(1, gateway.shards().toOptional().orElseThrow());
-        assertEquals(1000, gateway.sessionStartLimit().toOptional().orElseThrow().total());
-    }
-
-    @Test
-    void application_info_round_trips() throws Exception {
-        ApplicationInfoData application = this.mapper.readValue(this.entities.applicationInfoJson(), ApplicationInfoData.class);
-        assertEquals(this.config.getBotId(), application.id().asLong());
-        assertEquals(this.config.getVerifyKey(), application.verifyKey());
-    }
-
-    @Test
-    void guild_round_trips() throws Exception {
-        GuildUpdateData guild = this.mapper.readValue(this.entities.guildJson(), GuildUpdateData.class);
-        assertEquals(this.config.getGuildId(), guild.id().asLong());
-        assertEquals("Harness Guild", guild.name());
-    }
-
-    @Test
-    void reply_message_round_trips() throws Exception {
-        MessageData message = this.mapper.readValue(this.entities.messageJson(), MessageData.class);
-        assertEquals(this.config.getReplyMessageId(), message.id().asLong());
-    }
-
-    @Test
-    void empty_emojis_is_an_empty_item_list() throws Exception {
-        JsonNode node = this.mapper.readTree(this.entities.emptyEmojisJson());
-        assertTrue(node.get("items").isArray() && node.get("items").isEmpty());
-    }
-
-    @Test
-    void created_emoji_round_trips() throws Exception {
-        EmojiData emoji = this.mapper.readValue(this.entities.emojiJson(), EmojiData.class);
-        assertEquals("harness", emoji.name().orElseThrow());
-        assertTrue(emoji.id().isPresent());
-    }
-
-    @Test
-    void channel_round_trips() throws Exception {
-        ChannelData channel = this.mapper.readValue(this.entities.channelJson(), ChannelData.class);
-        assertEquals(this.config.getChannelId(), channel.id().asLong());
-        assertEquals(0, channel.type());
-    }
-
-    @Test
-    void reaction_users_is_an_empty_array() throws Exception {
-        JsonNode node = this.mapper.readTree(this.entities.reactionUsersJson());
-        assertTrue(node.isArray() && node.isEmpty());
-    }
-
-    @Test
-    void typed_entities_serialize_and_re_read() throws Exception {
-        UserData bot = reread(this.entities.botUser(), UserData.class);
+    void bot_user_is_the_configured_bot() throws Exception {
+        UserData bot = this.reread(this.entities.botUser(), UserData.class);
         assertEquals(this.config.getBotId(), bot.id().asLong());
+        assertEquals("TestBot", bot.username());
+        assertTrue(bot.bot().toOptional().orElseThrow());
+    }
 
-        UserData actor = reread(this.entities.actorUser(), UserData.class);
+    @Test
+    void actor_user_is_the_configured_non_bot_invoker() throws Exception {
+        UserData actor = this.reread(this.entities.actorUser(), UserData.class);
         assertEquals(this.config.getUserId(), actor.id().asLong());
+        assertFalse(actor.bot().toOptional().orElseThrow());
+    }
 
-        MessageData interactionMessage = reread(this.entities.interactionMessage(4242L), MessageData.class);
-        assertEquals(4242L, interactionMessage.id().asLong());
+    @Test
+    void developer_user_is_the_configured_owner() throws Exception {
+        PartialUserData developer = this.reread(this.entities.developerUser(), PartialUserData.class);
+        assertEquals(this.config.getDeveloperUserId(), developer.id().asLong());
+    }
+
+    @Test
+    void target_user_carries_the_requested_id() throws Exception {
+        UserData target = this.reread(this.entities.targetUser(777L), UserData.class);
+        assertEquals(777L, target.id().asLong());
+        assertFalse(target.bot().toOptional().orElseThrow());
+    }
+
+    @Test
+    void interaction_message_carries_the_requested_id() throws Exception {
+        MessageData message = this.reread(this.entities.interactionMessage(4242L), MessageData.class);
+        assertEquals(4242L, message.id().asLong());
+        assertEquals(this.config.getChannelId(), message.channelId().asLong());
+    }
+
+    @Test
+    void message_is_authored_by_the_bot_and_carries_its_content() throws Exception {
+        MessageData message = this.reread(this.entities.message(99L, "hello"), MessageData.class);
+        assertEquals(99L, message.id().asLong());
+        assertEquals("hello", message.content());
+        assertEquals(this.config.getBotId(), message.author().id().asLong());
     }
 
     private <T> T reread(Object entity, Class<T> type) throws Exception {

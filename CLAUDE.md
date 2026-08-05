@@ -35,9 +35,10 @@ there.
 ```
 FauxDiscord (AutoCloseable aggregate, one fresh deployment per instance)
     ├── FauxConfig             - the deterministic identity shared by every piece
-    ├── DiscordEntities        - discord-json entity factory (typed entities + REST bodies)
+    ├── DiscordEntities        - typed discord-json immutables, shared by both halves
     ├── LocalDiscordServer     - reactor-netty REST server; records every request
-    │       └── Route          - package-private enum: the declarative route table
+    │       ├── Route          - package-private enum: the declarative route table
+    │       └── RouteBodies    - package-private: the canned JSON each route returns
     └── FauxGatewayClient      - in-JVM GatewayClient, no socket
             └── DispatchFactory        - builds simulated dispatches for the identity
                     └── gateway/dispatch/*  - the per-kind dispatch builders
@@ -88,9 +89,16 @@ with synthetic ids, `NO_CONTENT` acknowledges with 204). Registered in declarati
 catch-all, so **order matters**: a broad pattern placed above a narrow one shadows it. Snowflake path params
 are `[^/]+`, or `\\d+` where the real endpoint is numeric.
 
-**`DiscordEntities`** (`json/`) - builds every response body from **discord-json builders**, never
-hand-written JSON strings. This is deliberate: the builders fail to compile when the pinned Discord4J version
-changes a payload shape, so the mock cannot silently drift from the real API.
+**`DiscordEntities`** (`entity/`) - the typed discord-json immutables (users, messages) both halves are built
+from: `gateway/` embeds them in dispatches, `rest/` serializes them. Everything comes from **discord-json
+builders**, never hand-written JSON strings. This is deliberate: the builders fail to compile when the pinned
+Discord4J version changes a payload shape, so the fake cannot drift silently from the real API.
+
+**`RouteBodies`** (`rest/`) - package-private, one method per JSON-returning `Route`, each serializing a
+`DiscordEntities` immutable with Discord4J's mapper. It is package-private for the same reason `Route` is:
+nothing outside `rest/` has any business reaching a raw response body. The `gateway/` and `rest/` halves use
+completely disjoint parts of the entity layer - gateway takes typed entities, rest takes serialized bodies -
+and this split is what keeps that boundary visible.
 
 **`FauxGatewayClient`** (`gateway/`) - implements `discord4j.gateway.GatewayClient` with no socket. `execute`
 replays the handshake (a `READY` plus `GatewayStateChange.connected()`) into a `Sinks.many().replay().all()`
@@ -129,7 +137,7 @@ a contract consumers rely on, documented in the README:
 - **Annotations** - `@NotNull`/`@Nullable` from `org.jetbrains.annotations` on public params and returns.
 - **Sequenced collections** - `.getFirst()`/`.getLast()`, never `.get(0)`/`.get(size() - 1)`.
 - **Control flow** - omit braces on single-line bodies; add them when the body wraps.
-- **Adding a route**: add the constant to `Route`, build the body in `DiscordEntities`, cover it in
-  `LocalDiscordServerTest`.
+- **Adding a route**: add the constant to `Route`, the body method to `RouteBodies` (reaching into
+  `DiscordEntities` for any user/message shape), and cover it in `RouteBodiesTest` plus `LocalDiscordServerTest`.
 - **Adding a dispatch**: add the builder to the right `gateway/dispatch/*` class, expose it from
   `DispatchFactory`, cover the payload shape in `DispatchFactoryTest`, add a README table row.

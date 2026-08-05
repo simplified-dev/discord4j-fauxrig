@@ -2,7 +2,7 @@ package dev.simplified.discordfauxrig;
 
 import dev.simplified.discordfauxrig.gateway.DispatchFactory;
 import dev.simplified.discordfauxrig.gateway.FauxGatewayClient;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import dev.simplified.discordfauxrig.rest.LocalDiscordServer;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
 import discord4j.discordjson.json.gateway.Dispatch;

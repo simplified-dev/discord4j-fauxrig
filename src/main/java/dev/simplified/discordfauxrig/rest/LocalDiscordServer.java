@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.simplified.discordfauxrig.FauxConfig;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
-import dev.simplified.annotations.RequiredArgsConstructor;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import dev.simplified.annotations.Log;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
@@ -31,11 +30,10 @@ import java.util.regex.Pattern;
  * endpoints for the framework's login prologue and post-connect sync, echoes bulk command overwrites with
  * synthetic ids, and records every request for assertions.
  * <p>
- * The endpoint list lives in the {@link Route} table; {@code start()} loads it and appends a catch-all. The
- * response bodies come from the shared {@link DiscordEntities}, so this class holds only server plumbing.
+ * The endpoint list lives in the {@link Route} table; {@code start()} loads it and appends a catch-all, and
+ * the JSON each route returns comes from {@link RouteBodies}, so this class holds only server plumbing.
  */
 @Log
-@RequiredArgsConstructor
 public final class LocalDiscordServer {
 
     // Matches an interaction-callback path, capturing the interaction token in group 1.
@@ -46,7 +44,20 @@ public final class LocalDiscordServer {
     private final Set<String> acknowledgedTokens = ConcurrentHashMap.newKeySet();
     private final FauxConfig config;
     private final DiscordEntities entities;
+    private final RouteBodies bodies;
     private DisposableServer server;
+
+    /**
+     * Binds nothing yet; call {@link #start()} to listen.
+     *
+     * @param config the identity this server serves
+     * @param entities the shared entity factory its response bodies are built from
+     */
+    public LocalDiscordServer(@NotNull FauxConfig config, @NotNull DiscordEntities entities) {
+        this.config = config;
+        this.entities = entities;
+        this.bodies = new RouteBodies(config, entities);
+    }
 
     /**
      * Binds the server on an ephemeral loopback port, loading every {@link Route} ahead of the catch-all.
@@ -108,7 +119,7 @@ public final class LocalDiscordServer {
     /** Builds the handler for a route's response {@link Route.Kind}, over the shared {@code respond} pipeline. */
     private BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> handlerFor(Route route) {
         return switch (route.kind()) {
-            case JSON -> (request, response) -> respond(request, response, 200, ignored -> route.body(this.entities));
+            case JSON -> (request, response) -> respond(request, response, 200, ignored -> route.body(this.bodies));
             case ECHO -> (request, response) -> respond(request, response, 200, this::echoCommands);
             case NO_CONTENT -> (request, response) -> respond(request, response, 204, null);
         };

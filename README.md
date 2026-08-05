@@ -154,7 +154,8 @@ src/main/java/dev/simplified/discordfauxrig/
 ├── FauxConfig.java              # the deterministic identity (ids, fake token, command-id scheme)
 ├── rest/
 │   ├── LocalDiscordServer.java  # reactor-netty server implementing the REST routes a bot touches
-│   ├── Route.java               # the route table
+│   ├── Route.java               # the route table (package-private)
+│   ├── RouteBodies.java         # the canned JSON each route returns (package-private)
 │   ├── RecordedRequest.java     # one captured request
 │   └── RenderedMessage.java     # parses an outbound payload into a structured view
 ├── gateway/
@@ -163,8 +164,8 @@ src/main/java/dev/simplified/discordfauxrig/
 │   ├── SlashOption.java         # a resolved leaf option
 │   └── dispatch/                # ComponentDispatches, InteractionDispatches, Interactions,
 │                                # LifecycleDispatches, MessageDispatches
-└── json/
-    └── DiscordEntities.java     # JSON entity factory (users, channels, guilds, messages)
+└── entity/
+    └── DiscordEntities.java     # typed discord-json immutables shared by both halves
 ```
 
 `FauxGatewayClient` replays a `READY` + `GatewayStateChange.connected()` handshake so login completes, then

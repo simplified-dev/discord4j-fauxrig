@@ -5,7 +5,7 @@ import dev.simplified.discordfauxrig.gateway.dispatch.ComponentDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.InteractionDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.LifecycleDispatches;
 import dev.simplified.discordfauxrig.gateway.dispatch.MessageDispatches;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import discord4j.discordjson.json.ComponentData;
 import discord4j.discordjson.json.gateway.Dispatch;
 import org.jetbrains.annotations.NotNull;

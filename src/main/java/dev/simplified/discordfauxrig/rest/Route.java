@@ -1,6 +1,5 @@
 package dev.simplified.discordfauxrig.rest;
 
-import dev.simplified.discordfauxrig.json.DiscordEntities;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,11 +19,11 @@ import java.util.function.Function;
 enum Route {
 
     // Login prologue - gateway and identity reads
-    SELF_USER("GET", "/users/@me", Kind.JSON, DiscordEntities::userJson),
-    GATEWAY("GET", "/gateway", Kind.JSON, DiscordEntities::gatewayJson),
-    GATEWAY_BOT("GET", "/gateway/bot", Kind.JSON, DiscordEntities::gatewayBotJson),
-    APPLICATION_INFO("GET", "/oauth2/applications/@me", Kind.JSON, DiscordEntities::applicationInfoJson),
-    GUILD("GET", "/guilds/[^/]+", Kind.JSON, DiscordEntities::guildJson),
+    SELF_USER("GET", "/users/@me", Kind.JSON, RouteBodies::userJson),
+    GATEWAY("GET", "/gateway", Kind.JSON, RouteBodies::gatewayJson),
+    GATEWAY_BOT("GET", "/gateway/bot", Kind.JSON, RouteBodies::gatewayBotJson),
+    APPLICATION_INFO("GET", "/oauth2/applications/@me", Kind.JSON, RouteBodies::applicationInfoJson),
+    GUILD("GET", "/guilds/[^/]+", Kind.JSON, RouteBodies::guildJson),
 
     // Command registration - bulk-overwrite echo
     GLOBAL_COMMANDS("PUT", "/applications/[^/]+/commands", Kind.ECHO, null),
@@ -32,28 +31,28 @@ enum Route {
 
     // Interaction responses - callback, reply, and followups (webhook + token)
     INTERACTION_CALLBACK("POST", "/interactions/[^/]+/[^/]+/callback", Kind.NO_CONTENT, null),
-    CREATE_FOLLOWUP("POST", "/webhooks/[^/]+/[^/]+", Kind.JSON, DiscordEntities::messageJson),
-    EDIT_ORIGINAL_MESSAGE("PATCH", ".*/messages/@original", Kind.JSON, DiscordEntities::messageJson),
-    EDIT_FOLLOWUP("PATCH", "/webhooks/[^/]+/[^/]+/messages/\\d+", Kind.JSON, DiscordEntities::messageJson),
+    CREATE_FOLLOWUP("POST", "/webhooks/[^/]+/[^/]+", Kind.JSON, RouteBodies::messageJson),
+    EDIT_ORIGINAL_MESSAGE("PATCH", ".*/messages/@original", Kind.JSON, RouteBodies::messageJson),
+    EDIT_FOLLOWUP("PATCH", "/webhooks/[^/]+/[^/]+/messages/\\d+", Kind.JSON, RouteBodies::messageJson),
     DELETE_FOLLOWUP("DELETE", "/webhooks/[^/]+/[^/]+/messages/[^/]+", Kind.NO_CONTENT, null),
 
     // Channel messages
-    CREATE_CHANNEL_MESSAGE("POST", "/channels/[^/]+/messages", Kind.JSON, DiscordEntities::messageJson),
-    EDIT_CHANNEL_MESSAGE("PATCH", "/channels/\\d+/messages/\\d+", Kind.JSON, DiscordEntities::messageJson),
-    GET_CHANNEL_MESSAGE("GET", "/channels/\\d+/messages/\\d+", Kind.JSON, DiscordEntities::messageJson),
+    CREATE_CHANNEL_MESSAGE("POST", "/channels/[^/]+/messages", Kind.JSON, RouteBodies::messageJson),
+    EDIT_CHANNEL_MESSAGE("PATCH", "/channels/\\d+/messages/\\d+", Kind.JSON, RouteBodies::messageJson),
+    GET_CHANNEL_MESSAGE("GET", "/channels/\\d+/messages/\\d+", Kind.JSON, RouteBodies::messageJson),
     DELETE_CHANNEL_MESSAGE("DELETE", "/channels/\\d+/messages/\\d+", Kind.NO_CONTENT, null),
-    GET_CHANNEL("GET", "/channels/\\d+", Kind.JSON, DiscordEntities::channelJson),
+    GET_CHANNEL("GET", "/channels/\\d+", Kind.JSON, RouteBodies::channelJson),
 
     // Reactions
-    GET_REACTIONS("GET", "/channels/\\d+/messages/\\d+/reactions/[^/]+", Kind.JSON, DiscordEntities::reactionUsersJson),
+    GET_REACTIONS("GET", "/channels/\\d+/messages/\\d+/reactions/[^/]+", Kind.JSON, RouteBodies::reactionUsersJson),
     ADD_SELF_REACTION("PUT", "/channels/\\d+/messages/\\d+/reactions/[^/]+/@me", Kind.NO_CONTENT, null),
     DELETE_SELF_REACTION("DELETE", "/channels/\\d+/messages/\\d+/reactions/[^/]+/@me", Kind.NO_CONTENT, null),
     DELETE_USER_REACTION("DELETE", "/channels/\\d+/messages/\\d+/reactions/[^/]+/\\d+", Kind.NO_CONTENT, null),
     DELETE_EMOJI_REACTIONS("DELETE", "/channels/\\d+/messages/\\d+/reactions/[^/]+", Kind.NO_CONTENT, null),
 
     // Application emojis
-    LIST_EMOJIS("GET", "/applications/[^/]+/emojis", Kind.JSON, DiscordEntities::emptyEmojisJson),
-    CREATE_EMOJI("POST", "/applications/[^/]+/emojis", Kind.JSON, DiscordEntities::emojiJson);
+    LIST_EMOJIS("GET", "/applications/[^/]+/emojis", Kind.JSON, RouteBodies::emptyEmojisJson),
+    CREATE_EMOJI("POST", "/applications/[^/]+/emojis", Kind.JSON, RouteBodies::emojiJson);
 
     /** How a matched route produces its response. */
     enum Kind {
@@ -72,9 +71,9 @@ enum Route {
     private final String method;
     private final String pathRegex;
     private final Kind kind;
-    private final @Nullable Function<DiscordEntities, String> body;
+    private final @Nullable Function<RouteBodies, String> body;
 
-    Route(@NotNull String method, @NotNull @Language("RegExp") String pathRegex, @NotNull Kind kind, @Nullable Function<DiscordEntities, String> body) {
+    Route(@NotNull String method, @NotNull @Language("RegExp") String pathRegex, @NotNull Kind kind, @Nullable Function<RouteBodies, String> body) {
         this.method = method;
         this.pathRegex = pathRegex;
         this.kind = kind;
@@ -97,13 +96,13 @@ enum Route {
     }
 
     /**
-     * Renders this route's JSON body from the shared entities.
+     * Renders this route's JSON body.
      *
-     * @param entities the shared entity factory
+     * @param bodies the response bodies for this run's identity
      * @return the serialized body, or {@code null} for a route with no entity body
      */
-    @Nullable String body(@NotNull DiscordEntities entities) {
-        return this.body == null ? null : this.body.apply(entities);
+    @Nullable String body(@NotNull RouteBodies bodies) {
+        return this.body == null ? null : this.body.apply(bodies);
     }
 
 }

@@ -1,6 +1,6 @@
 package dev.simplified.discordfauxrig.gateway.dispatch;
 
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import discord4j.discordjson.json.gateway.Dispatch;
 import discord4j.discordjson.json.gateway.MessageCreate;
 import dev.simplified.annotations.Log;

@@ -2,7 +2,7 @@ package dev.simplified.discordfauxrig.gateway.dispatch;
 
 import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.gateway.SlashOption;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.discordjson.json.ApplicationCommandInteractionData;
 import discord4j.discordjson.json.ApplicationCommandInteractionOptionData;

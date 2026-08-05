@@ -1,7 +1,7 @@
 package dev.simplified.discordfauxrig.test;
 
 import dev.simplified.discordfauxrig.FauxConfig;
-import dev.simplified.discordfauxrig.json.DiscordEntities;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import dev.simplified.discordfauxrig.rest.LocalDiscordServer;
 import io.netty.handler.codec.http.HttpMethod;
 import org.jetbrains.annotations.Nullable;
@@ -44,9 +44,9 @@ class LocalDiscordServerTest {
             new Case("self user", HttpMethod.GET, "/users/@me", null, 200, "TestBot"),
             new Case("gateway", HttpMethod.GET, "/gateway", null, 200, "fake-gateway"),
             new Case("gateway bot", HttpMethod.GET, "/gateway/bot", null, 200, "session_start_limit"),
-            new Case("application info", HttpMethod.GET, "/oauth2/applications/@me", null, 200, "Offline harness application"),
+            new Case("application info", HttpMethod.GET, "/oauth2/applications/@me", null, 200, "Faux Discord application"),
             new Case("emojis", HttpMethod.GET, "/applications/111/emojis", null, 200, "items"),
-            new Case("guild", HttpMethod.GET, "/guilds/222", null, 200, "Harness Guild"),
+            new Case("guild", HttpMethod.GET, "/guilds/222", null, 200, "Faux Guild"),
             new Case("global commands", HttpMethod.PUT, "/applications/111/commands", "[{\"name\":\"ping\",\"type\":1}]", 200, "ping"),
             new Case("guild commands", HttpMethod.PUT, "/applications/111/guilds/222/commands", "[{\"name\":\"echo\",\"type\":1}]", 200, "echo"),
             new Case("interaction callback", HttpMethod.POST, "/interactions/1/tok-abc/callback", "", 204, ""),
@@ -64,7 +64,7 @@ class LocalDiscordServerTest {
             new Case("delete self reaction", HttpMethod.DELETE, "/channels/333/messages/999/reactions/smile/@me", null, 204, ""),
             new Case("delete user reaction", HttpMethod.DELETE, "/channels/333/messages/999/reactions/smile/444", null, 204, ""),
             new Case("delete emoji reactions", HttpMethod.DELETE, "/channels/333/messages/999/reactions/smile", null, 204, ""),
-            new Case("create emoji", HttpMethod.POST, "/applications/111/emojis", "{\"name\":\"harness\"}", 200, "harness")
+            new Case("create emoji", HttpMethod.POST, "/applications/111/emojis", "{\"name\":\"faux\"}", 200, "faux")
         );
 
         for (Case route : cases) {
