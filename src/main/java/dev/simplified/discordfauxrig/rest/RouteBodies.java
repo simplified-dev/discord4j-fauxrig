@@ -42,6 +42,19 @@ final class RouteBodies {
         return this.write(this.entities.botUser());
     }
 
+    /**
+     * {@code GET /users/{user}} - the acting user.
+     *
+     * <p>
+     * The same user whatever id is asked for, because a route body is chosen by path pattern and never
+     * sees the path. That is enough for a caller resolving a user id it already holds, which is what the
+     * routes needing one do; a test that cares which user came back should assert against the id it
+     * passed rather than against this.
+     */
+    @NotNull String actorUserJson() {
+        return this.write(this.entities.actorUser());
+    }
+
     /** {@code GET /gateway} - the gateway url. */
     @NotNull String gatewayJson() {
         return this.write(GatewayData.builder().url(this.config.getGatewayUrl()).build());

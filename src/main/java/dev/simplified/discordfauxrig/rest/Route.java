@@ -20,6 +20,7 @@ enum Route {
 
     // Login prologue - gateway and identity reads
     SELF_USER("GET", "/users/@me", Kind.JSON, RouteBodies::userJson),
+    USER_BY_ID("GET", "/users/\\d+", Kind.JSON, RouteBodies::actorUserJson),
     GATEWAY("GET", "/gateway", Kind.JSON, RouteBodies::gatewayJson),
     GATEWAY_BOT("GET", "/gateway/bot", Kind.JSON, RouteBodies::gatewayBotJson),
     APPLICATION_INFO("GET", "/oauth2/applications/@me", Kind.JSON, RouteBodies::applicationInfoJson),
