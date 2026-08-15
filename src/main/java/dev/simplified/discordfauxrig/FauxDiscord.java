@@ -20,7 +20,7 @@ import java.util.function.Predicate;
  * A stand-in for Discord itself: a localhost REST mock, a fake in-JVM gateway, and the deterministic identity
  * ({@link FauxConfig}) the two share. It knows nothing about any bot - a consumer wires its own
  * {@code DiscordBot} to {@link #baseUrl()} and {@link #gateway()}, drives dispatches built by
- * {@link #dispatches()}, and asserts on the captured REST traffic exposed here.
+ * {@link #dispatch()}, and asserts on the captured REST traffic exposed here.
  * <p>
  * Each instance is one fresh deployment: server, gateway, and dispatch factory are recreated per instance.
  * <p>
@@ -35,8 +35,14 @@ public final class FauxDiscord implements AutoCloseable {
     private final FauxConfig config;
 
     private final LocalDiscordServer server;
-    private final FauxGatewayClient gatewayClient;
-    private final DispatchFactory dispatchFactory;
+
+    /** The fake in-JVM gateway; wire it via {@code withGatewayClientFactory} and push dispatches with {@code emit}. */
+    @Getter(style = NamingStyle.FLUENT)
+    private final @NotNull FauxGatewayClient gateway;
+
+    /** The dispatch factory that builds simulated gateway events for this identity. */
+    @Getter(style = NamingStyle.FLUENT)
+    private final @NotNull DispatchFactory dispatch;
 
     /** Boots with the standard harness identity ({@code FauxConfig.builder().build()}). */
     public FauxDiscord() {
@@ -51,11 +57,11 @@ public final class FauxDiscord implements AutoCloseable {
     public FauxDiscord(@NotNull FauxConfig config) {
         this.config = config;
         DiscordEntities entities = new DiscordEntities(config);
-        this.dispatchFactory = new DispatchFactory(config, entities);
+        this.dispatch = new DispatchFactory(config, entities);
         this.server = new LocalDiscordServer(config, entities).start();
 
-        List<Dispatch> handshake = this.dispatchFactory.handshake(config.getBotId());
-        this.gatewayClient = new FauxGatewayClient(handshake, 1);
+        List<Dispatch> handshake = this.dispatch.handshake(config.getBotId());
+        this.gateway = new FauxGatewayClient(handshake, 1);
 
         log.info("Faux Discord constructed: botId={} guildId={} REST base {}", config.getBotId(), config.getGuildId(), this.server.baseUrl());
     }
@@ -63,16 +69,6 @@ public final class FauxDiscord implements AutoCloseable {
     /** The base url of the localhost REST mock; point a bot's {@code DiscordConfig.withApiBaseUrl} at it. */
     public @NotNull String baseUrl() {
         return this.server.baseUrl();
-    }
-
-    /** The fake in-JVM gateway; wire it via {@code withGatewayClientFactory} and push dispatches with {@code emit}. */
-    public @NotNull FauxGatewayClient gateway() {
-        return this.gatewayClient;
-    }
-
-    /** The dispatch factory that builds simulated gateway events for this identity. */
-    public @NotNull DispatchFactory dispatches() {
-        return this.dispatchFactory;
     }
 
     /** All requests the REST mock has recorded, in order. */
@@ -172,7 +168,7 @@ public final class FauxDiscord implements AutoCloseable {
     @Override
     public void close() {
         log.debug("Closing faux Discord");
-        this.gatewayClient.close(false).subscribe();
+        this.gateway.close(false).subscribe();
         this.server.stop();
     }
 
