@@ -105,13 +105,13 @@ class RouteBodiesTest {
 
     @Test
     void every_json_route_has_a_body() {
-        for (Route route : Route.values()) {
+        Route.forEach(route -> {
             if (route.kind() != Route.Kind.JSON)
-                continue;
+                return;
 
             String body = route.body(this.bodies);
             assertTrue(body != null && !body.isBlank(), route + " is a JSON route but rendered no body");
-        }
+        });
     }
 
 }

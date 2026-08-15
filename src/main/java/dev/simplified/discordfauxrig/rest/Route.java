@@ -1,5 +1,6 @@
 package dev.simplified.discordfauxrig.rest;
 
+import dev.simplified.annotations.EnumLookup;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,7 @@ import java.util.function.Function;
  * parameter is written as {@code [^/]+} (one segment), or {@code \\d+} where the original endpoint was numeric.
  * The routes are registered in declaration order, ahead of {@link LocalDiscordServer}'s catch-all.
  */
+@EnumLookup
 enum Route {
 
     // Login prologue - gateway and identity reads
