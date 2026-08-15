@@ -31,9 +31,10 @@ dependencies {
     api(libs.log4j2.api)
 
     // Simplified Annotations
-    implementation("io.github.simplified-dev:annotations:2.5.0")
-    annotationProcessor("io.github.simplified-dev:annotations:2.5.0")
-    testAnnotationProcessor("io.github.simplified-dev:annotations:2.5.0")
+    compileOnly("io.github.simplified-dev:annotations:2.5.1")
+    annotationProcessor("io.github.simplified-dev:annotations:2.5.1")
+    testCompileOnly("io.github.simplified-dev:annotations:2.5.1")
+    testAnnotationProcessor("io.github.simplified-dev:annotations:2.5.1")
 
     // Tests
     testImplementation(libs.junit.jupiter.api)

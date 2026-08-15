@@ -1,12 +1,14 @@
 package dev.simplified.discordfauxrig;
 
+import dev.simplified.annotations.Getter;
+import dev.simplified.annotations.Log;
+import dev.simplified.annotations.NamingStyle;
+import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import dev.simplified.discordfauxrig.gateway.DispatchFactory;
 import dev.simplified.discordfauxrig.gateway.FauxGatewayClient;
-import dev.simplified.discordfauxrig.entity.DiscordEntities;
 import dev.simplified.discordfauxrig.rest.LocalDiscordServer;
 import dev.simplified.discordfauxrig.rest.RecordedRequest;
 import discord4j.discordjson.json.gateway.Dispatch;
-import dev.simplified.annotations.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -28,7 +30,10 @@ import java.util.function.Predicate;
 @Log
 public final class FauxDiscord implements AutoCloseable {
 
+    /** The harness identity backing this run (ids, token, command-id scheme). */
+    @Getter(style = NamingStyle.FLUENT)
     private final FauxConfig config;
+
     private final LocalDiscordServer server;
     private final FauxGatewayClient gatewayClient;
     private final DispatchFactory dispatchFactory;
@@ -53,11 +58,6 @@ public final class FauxDiscord implements AutoCloseable {
         this.gatewayClient = new FauxGatewayClient(handshake, 1);
 
         log.info("Faux Discord constructed: botId={} guildId={} REST base {}", config.getBotId(), config.getGuildId(), this.server.baseUrl());
-    }
-
-    /** The harness identity backing this run (ids, token, command-id scheme). */
-    public @NotNull FauxConfig config() {
-        return this.config;
     }
 
     /** The base url of the localhost REST mock; point a bot's {@code DiscordConfig.withApiBaseUrl} at it. */

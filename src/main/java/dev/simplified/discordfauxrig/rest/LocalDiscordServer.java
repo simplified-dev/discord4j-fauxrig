@@ -3,9 +3,9 @@ package dev.simplified.discordfauxrig.rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dev.simplified.annotations.Log;
 import dev.simplified.discordfauxrig.FauxConfig;
 import dev.simplified.discordfauxrig.entity.DiscordEntities;
-import dev.simplified.annotations.Log;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 import org.reactivestreams.Publisher;
@@ -69,9 +69,7 @@ public final class LocalDiscordServer {
             .host(this.config.getGatewayHost())
             .port(0)
             .route(routes -> {
-                for (Route route : Route.values())
-                    routes.route(this.matcher(route), this.handlerFor(route));
-
+                Route.forEach(route -> routes.route(this.matcher(route), this.handlerFor(route)));
                 routes.route(request -> true, this.catchAll());
             })
             .bindNow();
