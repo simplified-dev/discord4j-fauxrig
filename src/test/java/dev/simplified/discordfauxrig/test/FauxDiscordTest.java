@@ -37,7 +37,7 @@ class FauxDiscordTest {
     void wires_the_server_pieces() {
         assertNotNull(this.harness.config());
         assertNotNull(this.harness.gateway());
-        assertNotNull(this.harness.dispatches());
+        assertNotNull(this.harness.dispatch());
         assertTrue(this.harness.baseUrl().startsWith("http://"), "base url should be plaintext loopback; got " + this.harness.baseUrl());
     }
 
@@ -59,7 +59,7 @@ class FauxDiscordTest {
 
     @Test
     void gateway_emits_into_the_dispatch_pipeline() {
-        this.harness.gateway().emit(this.harness.dispatches().messageCreate(1L));
+        this.harness.gateway().emit(this.harness.dispatch().messageCreate(1L));
 
         var dispatch = this.harness.gateway().dispatch().take(1).blockFirst(Duration.ofSeconds(5));
         assertNotNull(dispatch, "the emitted dispatch should surface on the gateway flux");
